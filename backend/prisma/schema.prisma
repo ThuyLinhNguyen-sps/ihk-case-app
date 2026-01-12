@@ -6,6 +6,61 @@ datasource db {
   provider = "postgresql"
 }
 
+model Case {
+  id              Int              @id @default(autoincrement())
+  fullName        String
+  dob             DateTime?
+  jobTitle        String?
+  phone           String?
+  city            String?
+  visaStatus      VisaStatus?      @default(VAN_THIEU_HO_SO)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @default(now()) @updatedAt
+  documents       CaseDocument[]
+  customDocuments CustomDocument[] @relation("CaseToCustomDocuments")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String
+  role      Role
+  password  String
+  createdAt DateTime @default(now())
+}
+
+model CaseDocument {
+  id                  Int       @id @default(autoincrement())
+  caseId              Int
+  type                DocType
+  required            Boolean   @default(true)
+  fileName            String?
+  filePath            String?
+  language            String?
+  translationRequired Boolean   @default(false)
+  updatedAt           DateTime?
+  uploadedBy          Int?
+  case                Case      @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  @@unique([caseId, type])
+  @@index([caseId])
+}
+
+model CustomDocument {
+  id         Int       @id @default(autoincrement())
+  caseId     Int
+  title      String
+  required   Boolean   @default(false)
+  fileName   String?
+  filePath   String?
+  uploadedAt DateTime?
+  uploadedBy Int?
+  createdAt  DateTime  @default(now())
+  case       Case      @relation("CaseToCustomDocuments", fields: [caseId], references: [id], onDelete: Cascade)
+
+  @@index([caseId])
+}
+
 enum Role {
   ADMIN
   STAFF
@@ -29,69 +84,4 @@ enum VisaStatus {
   DA_LAN_TAY
   DA_CO_VISUM
   CHUA_DU_8_THANG
-}
-
-model Case {
-  id       Int       @id @default(autoincrement())
-  fullName String
-  dob      DateTime?
-  jobTitle String?
-
-  phone      String?
-  city       String?
-  visaStatus VisaStatus? @default(VAN_THIEU_HO_SO)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
-
-  documents       CaseDocument[]
-  customDocuments CustomDocument[] @relation("CaseToCustomDocuments")
-}
-
-model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  name      String
-  role      Role
-  password  String
-  createdAt DateTime @default(now())
-}
-
-model CaseDocument {
-  id       Int     @id @default(autoincrement())
-  caseId   Int
-  type     DocType
-  required Boolean @default(true)
-
-  fileName            String?
-  filePath            String?
-  language            String?
-  translationRequired Boolean @default(false)
-
-  updatedAt  DateTime?
-  uploadedBy Int?
-
-  case Case @relation(fields: [caseId], references: [id], onDelete: Cascade)
-
-  @@unique([caseId, type])
-  @@index([caseId])
-}
-
-model CustomDocument {
-  id     Int @id @default(autoincrement())
-  caseId Int
-
-  title    String
-  required Boolean @default(false)
-
-  fileName   String?
-  filePath   String?
-  uploadedAt DateTime?
-  uploadedBy Int?
-
-  createdAt DateTime @default(now())
-
-  case Case @relation("CaseToCustomDocuments", fields: [caseId], references: [id], onDelete: Cascade)
-
-  @@index([caseId])
 }
