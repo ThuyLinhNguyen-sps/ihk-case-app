@@ -320,7 +320,7 @@ export default function CasesPage() {
           }}
         />
         <input
-          placeholder="Tìm theo thành phố..."
+          placeholder="Tìm theo nhà hàng..."
           value={qCity}
           onChange={(e) => setQCity(e.target.value)}
           style={{
@@ -463,7 +463,7 @@ export default function CasesPage() {
                 />
 
                 <input
-                  placeholder="Thành phố"
+                  placeholder="Nhà hàng"
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
                   style={{
