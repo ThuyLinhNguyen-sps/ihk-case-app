@@ -27,6 +27,7 @@ type CaseItem = {
   jobTitle?: string | null; // Loại visa
   phone?: string | null;
   city?: string | null;
+  restaurantName?: string | null; // ✅ NEW
   visaStatus?: string | null;
 };
 
@@ -102,7 +103,7 @@ export default function CasesPage() {
 
   // search
   const [qName, setQName] = useState("");
-  const [qCity, setQCity] = useState("");
+  const [qRestaurant, setQRestaurant] = useState(""); // ✅ NEW (thay cho qCity)
 
   // Create form toggle
   const [openCreate, setOpenCreate] = useState(false);
@@ -110,7 +111,8 @@ export default function CasesPage() {
   const [dob, setDob] = useState(""); // user nhập dd.MM.yyyy
   const [jobTitle, setJobTitle] = useState(""); // loại visa
   const [phone, setPhone] = useState("");
-  const [city, setCity] = useState("");
+  const [city, setCity] = useState(""); // vẫn giữ nếu bạn còn dùng
+  const [restaurantName, setRestaurantName] = useState(""); // ✅ NEW
   const [visaStatus, setVisaStatus] = useState(VISA_STATUS_OPTIONS[1]); // default: "Vẫn thiếu hồ sơ"
 
   const [creating, setCreating] = useState(false);
@@ -141,14 +143,19 @@ export default function CasesPage() {
 
   const filteredItems = useMemo(() => {
     const nameNeedle = qName.trim().toLowerCase();
-    const cityNeedle = qCity.trim().toLowerCase();
+    const restaurantNeedle = qRestaurant.trim().toLowerCase();
 
     return items.filter((c) => {
-      const okName = !nameNeedle || (c.fullName || "").toLowerCase().includes(nameNeedle);
-      const okCity = !cityNeedle || (c.city || "").toLowerCase().includes(cityNeedle);
-      return okName && okCity;
+      const okName =
+        !nameNeedle || (c.fullName || "").toLowerCase().includes(nameNeedle);
+
+      const okRestaurant =
+        !restaurantNeedle ||
+        (c.restaurantName || "").toLowerCase().includes(restaurantNeedle);
+
+      return okName && okRestaurant;
     });
-  }, [items, qName, qCity]);
+  }, [items, qName, qRestaurant]);
 
   async function submitCreate() {
     if (!fullName.trim()) {
@@ -171,6 +178,7 @@ export default function CasesPage() {
         jobTitle: jobTitle.trim() || undefined, // loại visa
         phone: phone.trim() || undefined,
         city: city.trim() || undefined,
+        restaurantName: restaurantName.trim() || undefined, // ✅ NEW
         visaStatus: visaStatus || undefined,
       });
 
@@ -179,6 +187,7 @@ export default function CasesPage() {
       setJobTitle("");
       setPhone("");
       setCity("");
+      setRestaurantName(""); // ✅ NEW
       setVisaStatus(VISA_STATUS_OPTIONS[1]);
       setOpenCreate(false);
 
@@ -193,7 +202,9 @@ export default function CasesPage() {
   }
 
   async function onDelete(caseId: number, fullName: string) {
-    const ok = window.confirm(`Xoá hồ sơ "${fullName}"?\nHành động này không thể hoàn tác.`);
+    const ok = window.confirm(
+      `Xoá hồ sơ "${fullName}"?\nHành động này không thể hoàn tác.`,
+    );
     if (!ok) return;
 
     try {
@@ -207,7 +218,9 @@ export default function CasesPage() {
   async function onChangeStatus(caseId: number, newStatus: string) {
     try {
       // optimistic update
-      setItems((prev) => prev.map((x) => (x.id === caseId ? { ...x, visaStatus: newStatus } : x)));
+      setItems((prev) =>
+        prev.map((x) => (x.id === caseId ? { ...x, visaStatus: newStatus } : x)),
+      );
       await api.updateCase(caseId, { visaStatus: newStatus });
     } catch (e: any) {
       alert(e?.message || "Cập nhật trạng thái thất bại");
@@ -241,7 +254,9 @@ export default function CasesPage() {
       >
         <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
           <h1 style={{ margin: 0, fontSize: 28, fontWeight: 900 }}>Hồ sơ</h1>
-          <Badge>Tổng: {filteredItems.length}/{items.length}</Badge>
+          <Badge>
+            Tổng: {filteredItems.length}/{items.length}
+          </Badge>
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
@@ -283,13 +298,7 @@ export default function CasesPage() {
       </div>
 
       {/* Company title (center) */}
-      <div
-        style={{
-          textAlign: "center",
-          margin: "12px 0 20px",
-          padding: "10px 12px",
-        }}
-      >
+      <div style={{ textAlign: "center", margin: "12px 0 20px", padding: "10px 12px" }}>
         <div style={{ fontSize: 26, fontWeight: 1000, letterSpacing: 0.6 }}>
           CÔNG TY TNHH TƯ VẤN VÀ DỊCH VỤ VISA ĐỨC PHÚC
         </div>
@@ -319,12 +328,13 @@ export default function CasesPage() {
             fontWeight: 700,
           }}
         />
+
         <input
-          placeholder="Tìm theo nhà hàng..."
-          value={qCity}
-          onChange={(e) => setQCity(e.target.value)}
+          placeholder="Tìm theo tên nhà hàng..."
+          value={qRestaurant}
+          onChange={(e) => setQRestaurant(e.target.value)}
           style={{
-            flex: "1 1 220px",
+            flex: "1 1 260px",
             padding: "12px 14px",
             borderRadius: 12,
             border: "1px solid #e5e7eb",
@@ -333,10 +343,11 @@ export default function CasesPage() {
             fontWeight: 700,
           }}
         />
+
         <button
           onClick={() => {
             setQName("");
-            setQCity("");
+            setQRestaurant("");
           }}
           style={{
             padding: "12px 14px",
@@ -393,7 +404,7 @@ export default function CasesPage() {
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "2fr 1fr 1.2fr 1fr 1fr 1.2fr auto auto",
+                  gridTemplateColumns: "2fr 1fr 1.2fr 1.2fr 1fr 1fr 1.2fr auto auto",
                   gap: 10,
                   alignItems: "center",
                 }}
@@ -450,6 +461,19 @@ export default function CasesPage() {
                 </select>
 
                 <input
+                  placeholder="Tên nhà hàng"
+                  value={restaurantName}
+                  onChange={(e) => setRestaurantName(e.target.value)}
+                  style={{
+                    padding: "12px 14px",
+                    borderRadius: 12,
+                    border: "1px solid #e5e7eb",
+                    fontSize: 15,
+                    fontWeight: 700,
+                  }}
+                />
+
+                <input
                   placeholder="Số điện thoại"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
@@ -463,7 +487,7 @@ export default function CasesPage() {
                 />
 
                 <input
-                  placeholder="Nhà hàng"
+                  placeholder="Thành phố"
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
                   style={{
@@ -601,29 +625,40 @@ export default function CasesPage() {
           )}
         </div>
 
-        <table
-          style={{
-            width: "100%",
-            borderCollapse: "collapse",
-            tableLayout: "fixed", // ✅ không scroll ngang
-          }}
-        >
+        <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
           <thead>
             <tr style={{ textAlign: "left", color: "#6b7280", fontSize: 12 }}>
-              <th style={{ padding: "12px 14px", borderBottom: "1px solid #e5e7eb", width: "20%" }}>Họ tên</th>
-              <th style={{ padding: "12px 14px", borderBottom: "1px solid #e5e7eb", width: "10%" }}>Ngày sinh</th>
-              <th style={{ padding: "12px 14px", borderBottom: "1px solid #e5e7eb", width: "14%" }}>Số điện thoại</th>
-              <th style={{ padding: "12px 14px", borderBottom: "1px solid #e5e7eb", width: "14%" }}>Thành phố</th>
-              <th style={{ padding: "12px 14px", borderBottom: "1px solid #e5e7eb", width: "16%" }}>Loại Visa</th>
-              <th style={{ padding: "12px 14px", borderBottom: "1px solid #e5e7eb", width: "14%" }}>Trạng thái</th>
-              <th style={{ padding: "12px 14px", borderBottom: "1px solid #e5e7eb", width: "12%" }}>Thao tác</th>
+              <th style={{ padding: "12px 14px", borderBottom: "1px solid #e5e7eb", width: "18%" }}>
+                Họ tên
+              </th>
+              <th style={{ padding: "12px 14px", borderBottom: "1px solid #e5e7eb", width: "10%" }}>
+                Ngày sinh
+              </th>
+              <th style={{ padding: "12px 14px", borderBottom: "1px solid #e5e7eb", width: "14%" }}>
+                Số điện thoại
+              </th>
+              <th style={{ padding: "12px 14px", borderBottom: "1px solid #e5e7eb", width: "14%" }}>
+                Nhà hàng
+              </th>
+              <th style={{ padding: "12px 14px", borderBottom: "1px solid #e5e7eb", width: "12%" }}>
+                Thành phố
+              </th>
+              <th style={{ padding: "12px 14px", borderBottom: "1px solid #e5e7eb", width: "14%" }}>
+                Loại Visa
+              </th>
+              <th style={{ padding: "12px 14px", borderBottom: "1px solid #e5e7eb", width: "12%" }}>
+                Trạng thái
+              </th>
+              <th style={{ padding: "12px 14px", borderBottom: "1px solid #e5e7eb", width: "12%" }}>
+                Thao tác
+              </th>
             </tr>
           </thead>
 
           <tbody>
             {loading && (
               <tr>
-                <td colSpan={7} style={{ padding: "14px 14px", color: "#6b7280", fontWeight: 700 }}>
+                <td colSpan={8} style={{ padding: "14px 14px", color: "#6b7280", fontWeight: 700 }}>
                   Đang tải...
                 </td>
               </tr>
@@ -631,7 +666,7 @@ export default function CasesPage() {
 
             {!loading && filteredItems.length === 0 && (
               <tr>
-                <td colSpan={7} style={{ padding: "14px 14px", color: "#6b7280", fontWeight: 700 }}>
+                <td colSpan={8} style={{ padding: "14px 14px", color: "#6b7280", fontWeight: 700 }}>
                   Không tìm thấy hồ sơ.
                 </td>
               </tr>
@@ -639,18 +674,8 @@ export default function CasesPage() {
 
             {filteredItems.map((c) => (
               <tr key={c.id} style={{ borderBottom: "1px solid #f3f4f6" }}>
-                <td
-                  style={{
-                    padding: "14px 14px",
-                    fontWeight: 1000,
-                    wordBreak: "break-word",
-                    whiteSpace: "normal",
-                  }}
-                >
-                  <Link
-                    to={`/cases/${c.id}`}
-                    style={{ color: "#111827", textDecoration: "none" }}
-                  >
+                <td style={{ padding: "14px 14px", fontWeight: 1000, wordBreak: "break-word" }}>
+                  <Link to={`/cases/${c.id}`} style={{ color: "#111827", textDecoration: "none" }}>
                     {c.fullName}
                   </Link>
                 </td>
@@ -661,6 +686,10 @@ export default function CasesPage() {
 
                 <td style={{ padding: "14px 14px", fontWeight: 800, color: "#374151", wordBreak: "break-word" }}>
                   {c.phone ?? "—"}
+                </td>
+
+                <td style={{ padding: "14px 14px", fontWeight: 800, color: "#374151", wordBreak: "break-word" }}>
+                  {c.restaurantName ?? "—"}
                 </td>
 
                 <td style={{ padding: "14px 14px", fontWeight: 800, color: "#374151", wordBreak: "break-word" }}>

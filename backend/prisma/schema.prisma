@@ -13,6 +13,7 @@ model Case {
   jobTitle        String?
   phone           String?
   city            String?
+  restaurantName  String? 
   visaStatus      VisaStatus?      @default(VAN_THIEU_HO_SO)
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @default(now()) @updatedAt

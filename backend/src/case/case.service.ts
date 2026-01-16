@@ -66,6 +66,7 @@ export class CaseService {
     jobTitle?: string;
     phone?: string;
     city?: string;
+    restaurantName?: string;
     visaStatus?: string;
   }) {
     const created = await this.prisma.case.create({
@@ -75,6 +76,7 @@ export class CaseService {
         jobTitle: data.jobTitle ?? null,
         phone: data.phone ?? null,
         city: data.city ?? null,
+          restaurantName: data.restaurantName ?? null,
         visaStatus: toVisaStatus(data.visaStatus) ?? VisaStatus.VAN_THIEU_HO_SO,
       },
     });
@@ -107,6 +109,7 @@ export class CaseService {
         jobTitle: true,
         phone: true,
         city: true,
+         restaurantName: true, 
         visaStatus: true,
         createdAt: true,
         updatedAt: true,
@@ -123,6 +126,7 @@ export class CaseService {
       jobTitle?: string;
       phone?: string;
       city?: string;
+        restaurantName?: string;
       visaStatus?: string;
     },
   ) {
@@ -137,6 +141,7 @@ export class CaseService {
         jobTitle: data.jobTitle ?? undefined,
         phone: data.phone ?? undefined,
         city: data.city ?? undefined,
+           restaurantName: data.restaurantName ?? undefined,
         visaStatus: toVisaStatus(data.visaStatus),
       },
     });

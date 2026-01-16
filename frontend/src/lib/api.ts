@@ -43,7 +43,8 @@ export const api = {
     jobTitle?: string; // loại visa
     phone?: string;
     city?: string;
-    visaStatus?: string; // trạng thái visa (VN text hoặc enum key)
+    visaStatus?: string;
+    restaurantName?: string;  // trạng thái visa (VN text hoặc enum key)
   }) =>
     request("/cases", {
       method: "POST",
@@ -60,6 +61,7 @@ export const api = {
       phone: string;
       city: string;
       visaStatus: string;
+    restaurantName: string; 
     }>,
   ) =>
     request(`/cases/${caseId}`, {

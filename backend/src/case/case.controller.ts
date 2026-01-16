@@ -43,6 +43,8 @@ export class CaseController {
       phone?: string;
       city?: string;
       visaStatus?: string;
+      restaurantName?: string;
+
     },
   ) {
     return this.service.create(body);
@@ -134,6 +136,8 @@ export class CaseController {
       phone?: string;
       city?: string;
       visaStatus?: string;
+      restaurantName?: string;
+
     },
   ) {
     return this.service.updateCase(Number(id), body);
