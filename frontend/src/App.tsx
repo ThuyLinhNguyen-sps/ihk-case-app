@@ -2,11 +2,21 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
 import CasesPage from "./pages/CasesPage";
 import CaseDetailPage from "./pages/CaseDetailPage";
-import { getToken } from "./lib/auth";
+import { getToken, isTokenExpired, clearToken } from "./lib/auth";
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const token = getToken();
-  return token ? <>{children}</> : <Navigate to="/login" replace />;
+
+  // Không có token
+  if (!token) return <Navigate to="/login" replace />;
+
+  // Có token nhưng hết hạn
+  if (isTokenExpired()) {
+    clearToken();
+    return <Navigate to="/login" replace />;
+  }
+
+  return <>{children}</>;
 }
 
 export default function App() {

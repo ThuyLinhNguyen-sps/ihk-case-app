@@ -34,3 +34,17 @@ export function getUserFromToken(): UserPayload | null {
   
 
 }
+export function isTokenExpired(leewaySeconds = 10): boolean {
+  const user = getUserFromToken();
+  if (!user?.exp) return false; // nếu không có exp thì coi như chưa biết
+  const now = Math.floor(Date.now() / 1000);
+  return now >= user.exp - leewaySeconds;
+}
+
+export function ensureValidTokenOrLogout() {
+  if (isTokenExpired()) {
+    clearToken();
+    window.location.href = "/login";
+  }
+}
+

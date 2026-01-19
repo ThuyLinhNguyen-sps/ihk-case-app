@@ -1,6 +1,16 @@
-import { getToken } from "./auth";
+
+
+
+
+import { getToken, clearToken } from "./auth";
 
 const BASE = import.meta.env.VITE_API_BASE;
+
+function forceLogout() {
+  clearToken();
+  // đưa về /login ngay cả khi đang ở deep route
+  window.location.href = "/login";
+}
 
 async function request(path: string, options: RequestInit = {}) {
   const token = getToken();
@@ -9,7 +19,12 @@ async function request(path: string, options: RequestInit = {}) {
 
   const res = await fetch(`${BASE}${path}`, { ...options, headers });
 
-  // handle errors nicely
+  // ✅ nếu token hết hạn / không hợp lệ
+  if (res.status === 401 || res.status === 403) {
+    forceLogout();
+    throw new Error("Unauthorized");
+  }
+
   const text = await res.text();
   let data: any = null;
   try {
