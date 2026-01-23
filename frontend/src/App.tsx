@@ -22,6 +22,9 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <Routes>
+      {/* ✅ Trang gốc luôn về login */}
+      <Route path="/" element={<Navigate to="/login" replace />} />
+
       <Route path="/login" element={<LoginPage />} />
 
       <Route
@@ -42,7 +45,8 @@ export default function App() {
         }
       />
 
-      <Route path="*" element={<Navigate to="/cases" replace />} />
+      {/* ✅ Bất kỳ route lạ cũng về login (KHÔNG về /cases) */}
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
 }

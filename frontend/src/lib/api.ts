@@ -105,13 +105,20 @@ export const api = {
 
   // download as blob (default docs)
   downloadDocument: async (caseId: number, type: string) => {
-    const token = getToken();
-    const res = await fetch(`${BASE}/cases/${caseId}/documents/${type}/download`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    });
-    if (!res.ok) throw new Error(`Download failed: ${res.status}`);
-    return res.blob();
-  },
+  const token = getToken();
+  const res = await fetch(`${BASE}/cases/${caseId}/documents/${type}/download`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+
+  if (res.status === 401 || res.status === 403) {
+    forceLogout();
+    throw new Error("Unauthorized");
+  }
+
+  if (!res.ok) throw new Error(`Download failed: ${res.status}`);
+  return res.blob();
+},
+
 
   // ===== CUSTOM DOCS =====
   addCustomDocument: (
@@ -140,14 +147,18 @@ export const api = {
 
   // download as blob (custom docs)
   downloadCustomDocument: async (caseId: number, docId: number) => {
-    const token = getToken();
-    const res = await fetch(
-      `${BASE}/cases/${caseId}/custom-documents/${docId}/download`,
-      {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      },
-    );
-    if (!res.ok) throw new Error(`Download failed: ${res.status}`);
-    return res.blob();
-  },
+  const token = getToken();
+  const res = await fetch(`${BASE}/cases/${caseId}/custom-documents/${docId}/download`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+
+  if (res.status === 401 || res.status === 403) {
+    forceLogout();
+    throw new Error("Unauthorized");
+  }
+
+  if (!res.ok) throw new Error(`Download failed: ${res.status}`);
+  return res.blob();
+},
+
 };
