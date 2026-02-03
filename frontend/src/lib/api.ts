@@ -1,7 +1,3 @@
-
-
-
-
 import { getToken, clearToken } from "./auth";
 
 const BASE = import.meta.env.VITE_API_BASE;
@@ -37,7 +33,24 @@ async function request(path: string, options: RequestInit = {}) {
     const msg = (data && (data.message || data.error)) || `HTTP ${res.status}`;
     throw new Error(typeof msg === "string" ? msg : JSON.stringify(msg));
   }
+
   return data;
+}
+
+// download blob helper (giữ y chang hành vi cũ, có auth + forceLogout)
+async function downloadBlobWithAuth(path: string) {
+  const token = getToken();
+  const res = await fetch(`${BASE}${path}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+
+  if (res.status === 401 || res.status === 403) {
+    forceLogout();
+    throw new Error("Unauthorized");
+  }
+
+  if (!res.ok) throw new Error(`Download failed: ${res.status}`);
+  return res.blob();
 }
 
 export const api = {
@@ -55,11 +68,11 @@ export const api = {
   createCase: (data: {
     fullName: string;
     dob?: string; // "YYYY-MM-DD"
-    jobTitle?: string; // loại visa
+    jobTitle?: string; // loại visa / job title
     phone?: string;
     city?: string;
     visaStatus?: string;
-    restaurantName?: string;  // trạng thái visa (VN text hoặc enum key)
+    restaurantName?: string;
   }) =>
     request("/cases", {
       method: "POST",
@@ -72,11 +85,11 @@ export const api = {
     data: Partial<{
       fullName: string;
       dob: string; // "YYYY-MM-DD"
-      jobTitle: string; // loại visa
+      jobTitle: string;
       phone: string;
       city: string;
       visaStatus: string;
-    restaurantName: string; 
+      restaurantName: string;
     }>,
   ) =>
     request(`/cases/${caseId}`, {
@@ -103,22 +116,9 @@ export const api = {
     });
   },
 
-  // download as blob (default docs)
   downloadDocument: async (caseId: number, type: string) => {
-  const token = getToken();
-  const res = await fetch(`${BASE}/cases/${caseId}/documents/${type}/download`, {
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-  });
-
-  if (res.status === 401 || res.status === 403) {
-    forceLogout();
-    throw new Error("Unauthorized");
-  }
-
-  if (!res.ok) throw new Error(`Download failed: ${res.status}`);
-  return res.blob();
-},
-
+    return downloadBlobWithAuth(`/cases/${caseId}/documents/${type}/download`);
+  },
 
   // ===== CUSTOM DOCS =====
   addCustomDocument: (
@@ -145,20 +145,19 @@ export const api = {
     });
   },
 
-  // download as blob (custom docs)
   downloadCustomDocument: async (caseId: number, docId: number) => {
-  const token = getToken();
-  const res = await fetch(`${BASE}/cases/${caseId}/custom-documents/${docId}/download`, {
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-  });
+    return downloadBlobWithAuth(
+      `/cases/${caseId}/custom-documents/${docId}/download`,
+    );
+  },
 
-  if (res.status === 401 || res.status === 403) {
-    forceLogout();
-    throw new Error("Unauthorized");
-  }
+  // ===== VISA PROFILE (NEW) =====
+  getVisaProfile: (caseId: number) => request(`/cases/${caseId}/visa-profile`),
 
-  if (!res.ok) throw new Error(`Download failed: ${res.status}`);
-  return res.blob();
-},
-
+  saveVisaProfile: (caseId: number, data: any) =>
+    request(`/cases/${caseId}/visa-profile`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    }),
 };

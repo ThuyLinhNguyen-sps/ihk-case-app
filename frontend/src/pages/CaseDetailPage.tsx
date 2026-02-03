@@ -263,6 +263,20 @@ export default function CaseDetailPage() {
           >
             ← Quay lại danh sách hồ sơ
           </Link>
+         <Link
+  to={`/cases/${caseId}/visa-profile`}
+  style={{
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 8,
+    color: "#1d4ed8",
+    textDecoration: "none",
+    fontSize: 16,
+    fontWeight: 1000,
+  }}
+>
+  ➜ Visa Profile (VI)
+</Link>
 
           <div
             style={{

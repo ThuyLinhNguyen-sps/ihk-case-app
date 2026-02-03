@@ -19,6 +19,7 @@ model Case {
   updatedAt       DateTime         @default(now()) @updatedAt
   documents       CaseDocument[]
   customDocuments CustomDocument[] @relation("CaseToCustomDocuments")
+   visaProfile     VisaProfile?  
 }
 
 model User {
@@ -85,4 +86,40 @@ enum VisaStatus {
   DA_LAN_TAY
   DA_CO_VISUM
   CHUA_DU_8_THANG
+}
+model VisaProfile {
+  id              Int      @id @default(autoincrement())
+  caseId           Int      @unique
+
+  phone            String?
+  email            String?
+  homeAddress      String?
+
+  heightCm         Int?
+  eyeColor         String?
+  religion         String?
+
+  maritalStatus    String?
+  marriageDate     DateTime?
+  divorceDate      DateTime?
+
+  currentCompany   String?
+  companyAddress   String?
+
+  graduatedSchool  String?
+  major            String?
+
+  bigAssets        String?
+
+  familyMembers    Json?
+  familyJobsIncome Json?
+
+  travelHistory    Json?
+  educationHistory Json?
+  workHistory      Json?
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  case             Case     @relation(fields: [caseId], references: [id], onDelete: Cascade)
 }

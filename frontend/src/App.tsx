@@ -3,6 +3,7 @@ import LoginPage from "./pages/LoginPage";
 import CasesPage from "./pages/CasesPage";
 import CaseDetailPage from "./pages/CaseDetailPage";
 import { getToken, isTokenExpired, clearToken } from "./lib/auth";
+import CaseVisaProfilePage from "./pages/CaseVisaProfilePage";
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const token = getToken();
@@ -35,6 +36,7 @@ export default function App() {
           </RequireAuth>
         }
       />
+      <Route path="/cases/:id/visa-profile" element={<CaseVisaProfilePage />} />
 
       <Route
         path="/cases/:id"
