@@ -11,9 +11,27 @@ import {
   WidthType,
 } from "docx";
 
+/** =========================
+ * Helpers
+ * ========================= */
+
+const VN_FONT = "Times New Roman";
+
+function safe(v: any) {
+  if (v === null || v === undefined) return "";
+  return String(v).trim();
+}
+
 function label(v: any) {
-  if (v === null || v === undefined || v === "") return "—";
-  return String(v);
+  const s = safe(v);
+  return s.length ? s : "—";
+}
+
+function vnDate(v: any) {
+  if (!v) return "—";
+  const d = new Date(v);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString("vi-VN");
 }
 
 function row(labelLeft: string, valueRight: any) {
@@ -23,63 +41,170 @@ function row(labelLeft: string, valueRight: any) {
         width: { size: 35, type: WidthType.PERCENTAGE },
         children: [
           new Paragraph({
-            children: [new TextRun({ text: labelLeft, bold: true })],
+            children: [
+              new TextRun({ text: labelLeft, bold: true, font: VN_FONT }),
+            ],
           }),
         ],
       }),
       new TableCell({
         width: { size: 65, type: WidthType.PERCENTAGE },
-        children: [new Paragraph(label(valueRight))],
+        children: [
+          new Paragraph({
+            children: [new TextRun({ text: label(valueRight), font: VN_FONT })],
+          }),
+        ],
       }),
     ],
   });
 }
 
-function jsonToBullet(value: any) {
-  if (!value) return [new Paragraph("—")];
-  if (Array.isArray(value) && value.length === 0) return [new Paragraph("—")];
-
-  // nếu là mảng object: mỗi item 1 bullet
-  if (Array.isArray(value)) {
-    return value.map((item, idx) => {
-      const text =
-        typeof item === "string"
-          ? item
-          : typeof item === "object"
-            ? Object.entries(item)
-                .map(([k, v]) => `${k}: ${v ?? ""}`)
-                .join(" | ")
-            : String(item);
-
-      return new Paragraph({
-        text: `${idx + 1}. ${text}`,
-      });
-    });
-  }
-
-  // object
-  if (typeof value === "object") {
-    const text = Object.entries(value)
-      .map(([k, v]) => `${k}: ${v ?? ""}`)
-      .join(" | ");
-    return [new Paragraph(text || "—")];
-  }
-
-  return [new Paragraph(String(value))];
+/** =========================
+ * Enum labels (VN)
+ * ========================= */
+function vnMaritalStatus(v: any) {
+  if (v === "KET_HON") return "Đã kết hôn";
+  if (v === "LY_HON") return "Ly hôn";
+  return "Độc thân";
 }
 
+function vnRelation(v: any) {
+  const map: Record<string, string> = {
+    BO: "Bố",
+    ME: "Mẹ",
+    VO_CHONG: "Vợ/Chồng",
+    CON: "Con",
+    ANH_CHI_EM: "Anh/Chị/Em",
+    KHAC: "Khác",
+  };
+  return map[v] ?? label(v);
+}
+
+function vnEduLevel(v: any) {
+  const map: Record<string, string> = {
+    TIEU_HOC: "Tiểu học",
+    TRUNG_HOC: "Trung học",
+    THPT: "THPT",
+    TRUNG_CAP: "Trung cấp",
+    CAO_DANG: "Cao đẳng",
+    DAI_HOC: "Đại học",
+    KHAC: "Khác",
+  };
+  return map[v] ?? label(v);
+}
+
+function vnTravelPurpose(v: any) {
+  const map: Record<string, string> = {
+    DU_LICH: "Du lịch",
+    XKLĐ: "Xuất khẩu lao động",
+    HOC_TAP: "Học tập",
+    CONG_TAC: "Công tác",
+    KHAC: "Khác",
+  };
+  return map[v] ?? label(v);
+}
+
+function bullet(text: string) {
+  return new Paragraph({
+    children: [new TextRun({ text, font: VN_FONT })],
+    bullet: { level: 0 },
+  });
+}
+
+function emptyLine() {
+  return new Paragraph({ children: [new TextRun({ text: "", font: VN_FONT })] });
+}
+
+/** =========================
+ * Section formatters (VN)
+ * ========================= */
+
+function renderFamilyMembers(value: any): Paragraph[] {
+  if (!Array.isArray(value) || value.length === 0) return [new Paragraph({ children: [new TextRun({ text: "—", font: VN_FONT })] })];
+
+  return value.map((m: any, idx: number) => {
+    const text =
+      `${idx + 1}) ${vnRelation(m?.relation)}: ` +
+      `${label(m?.fullName)}; ` +
+      `Ngày sinh: ${m?.dob ? vnDate(m.dob) : "—"}; ` +
+      `Quê quán: ${label(m?.hometown)}`;
+    return new Paragraph({ children: [new TextRun({ text, font: VN_FONT })] });
+  });
+}
+
+function renderFamilyJobsIncome(value: any): Paragraph[] {
+  if (!Array.isArray(value) || value.length === 0) return [new Paragraph({ children: [new TextRun({ text: "—", font: VN_FONT })] })];
+
+  return value.map((x: any, idx: number) => {
+    const text =
+      `${idx + 1}) ${vnRelation(x?.relation)} — ` +
+      `Công việc: ${label(x?.job)}; ` +
+      `Thu nhập: ${label(x?.income)}; ` +
+      `Chi tiết: ${label(x?.details)}`;
+    return new Paragraph({ children: [new TextRun({ text, font: VN_FONT })] });
+  });
+}
+
+function renderEducationHistory(value: any): Paragraph[] {
+  if (!Array.isArray(value) || value.length === 0) return [new Paragraph({ children: [new TextRun({ text: "—", font: VN_FONT })] })];
+
+  return value.map((ed: any, idx: number) => {
+    const text =
+      `${idx + 1}) ${vnEduLevel(ed?.level)} — ` +
+      `Thời gian: ${label(ed?.fromYear)} – ${label(ed?.toYear)}; ` +
+      `Trường: ${label(ed?.schoolName)}; ` +
+      `Địa chỉ: ${label(ed?.address)}; ` +
+      `Chuyên ngành: ${label(ed?.major)}; ` +
+      `Ghi chú: ${label(ed?.notes)}`;
+    return new Paragraph({ children: [new TextRun({ text, font: VN_FONT })] });
+  });
+}
+
+function renderWorkHistory(value: any): Paragraph[] {
+  if (!Array.isArray(value) || value.length === 0) return [new Paragraph({ children: [new TextRun({ text: "—", font: VN_FONT })] })];
+
+  return value.map((w: any, idx: number) => {
+    const text =
+      `${idx + 1}) Thời gian: ${label(w?.fromYear)} – ${label(w?.toYear)}; ` +
+      `Công ty: ${label(w?.company)}; ` +
+      `Địa chỉ: ${label(w?.address)}; ` +
+      `Chức vụ: ${label(w?.position)}; ` +
+      `Ghi chú: ${label(w?.notes)}`;
+    return new Paragraph({ children: [new TextRun({ text, font: VN_FONT })] });
+  });
+}
+
+function renderTravelHistory(value: any): Paragraph[] {
+  if (!Array.isArray(value) || value.length === 0) return [new Paragraph({ children: [new TextRun({ text: "—", font: VN_FONT })] })];
+
+  return value.map((t: any, idx: number) => {
+    const illegal = t?.illegalStay ? "Có" : "Không";
+    const text =
+      `${idx + 1}) Quốc gia: ${label(t?.country)}; ` +
+      `Thời gian: ${t?.fromDate ? vnDate(t.fromDate) : "—"} – ${t?.toDate ? vnDate(t.toDate) : "—"}; ` +
+      `Diện: ${vnTravelPurpose(t?.purpose)}; ` +
+      `Bất hợp pháp/quá hạn: ${illegal}; ` +
+      `Ghi chú: ${label(t?.notes)}`;
+    return new Paragraph({ children: [new TextRun({ text, font: VN_FONT })] });
+  });
+}
+
+/** =========================
+ * Builder
+ * ========================= */
 export async function buildSoYeuLyLichDocx(caseData: any, profile: any) {
   const fullName = caseData?.fullName ?? "";
-  const dob = caseData?.dob ? new Date(caseData.dob).toLocaleDateString("vi-VN") : "";
-
-  const marital =
-    profile?.maritalStatus === "KET_HON"
-      ? "Đã kết hôn"
-      : profile?.maritalStatus === "LY_HON"
-        ? "Ly hôn"
-        : "Độc thân";
+  const dob = caseData?.dob ? new Date(caseData.dob).toLocaleDateString("vi-VN") : "—";
 
   const doc = new Document({
+    styles: {
+      default: {
+        document: {
+          run: { font: VN_FONT },
+          paragraph: { spacing: { line: 276 } }, // line-height nhẹ
+        },
+      },
+    },
     sections: [
       {
         properties: {},
@@ -90,7 +215,7 @@ export async function buildSoYeuLyLichDocx(caseData: any, profile: any) {
             alignment: AlignmentType.CENTER,
           }),
 
-          new Paragraph({ text: "" }),
+          emptyLine(),
 
           new Paragraph({
             text: "I. THÔNG TIN CÁ NHÂN",
@@ -108,19 +233,13 @@ export async function buildSoYeuLyLichDocx(caseData: any, profile: any) {
               row("Chiều cao (cm)", profile?.heightCm),
               row("Màu mắt", profile?.eyeColor),
               row("Tôn giáo", profile?.religion),
-              row("Tình trạng hôn nhân", marital),
-              row(
-                "Ngày kết hôn (nếu có)",
-                profile?.marriageDate ? new Date(profile.marriageDate).toLocaleDateString("vi-VN") : ""
-              ),
-              row(
-                "Ngày ly hôn (nếu có)",
-                profile?.divorceDate ? new Date(profile.divorceDate).toLocaleDateString("vi-VN") : ""
-              ),
+              row("Tình trạng hôn nhân", vnMaritalStatus(profile?.maritalStatus)),
+              row("Ngày kết hôn (nếu có)", profile?.marriageDate ? vnDate(profile.marriageDate) : "—"),
+              row("Ngày ly hôn (nếu có)", profile?.divorceDate ? vnDate(profile.divorceDate) : "—"),
             ],
           }),
 
-          new Paragraph({ text: "" }),
+          emptyLine(),
 
           new Paragraph({
             text: "II. CÔNG VIỆC HIỆN TẠI",
@@ -135,7 +254,7 @@ export async function buildSoYeuLyLichDocx(caseData: any, profile: any) {
             ],
           }),
 
-          new Paragraph({ text: "" }),
+          emptyLine(),
 
           new Paragraph({
             text: "III. HỌC VẤN",
@@ -150,7 +269,7 @@ export async function buildSoYeuLyLichDocx(caseData: any, profile: any) {
             ],
           }),
 
-          new Paragraph({ text: "" }),
+          emptyLine(),
 
           new Paragraph({
             text: "IV. TÀI SẢN",
@@ -162,58 +281,69 @@ export async function buildSoYeuLyLichDocx(caseData: any, profile: any) {
             rows: [row("Tài sản lớn", profile?.bigAssets)],
           }),
 
-          new Paragraph({ text: "" }),
+          emptyLine(),
 
           new Paragraph({
             text: "V. THÔNG TIN GIA ĐÌNH",
             heading: HeadingLevel.HEADING_2,
           }),
-          ...jsonToBullet(profile?.familyMembers),
+          ...renderFamilyMembers(profile?.familyMembers),
 
-          new Paragraph({ text: "" }),
+          emptyLine(),
 
           new Paragraph({
-            text: "VI. QUÁ TRÌNH HỌC TẬP",
+            text: "VI. CÔNG VIỆC & THU NHẬP CỦA GIA ĐÌNH",
             heading: HeadingLevel.HEADING_2,
           }),
-          ...jsonToBullet(profile?.educationHistory),
+          ...renderFamilyJobsIncome(profile?.familyJobsIncome),
 
-          new Paragraph({ text: "" }),
+          emptyLine(),
 
           new Paragraph({
-            text: "VII. QUÁ TRÌNH CÔNG TÁC",
+            text: "VII. QUÁ TRÌNH HỌC TẬP",
             heading: HeadingLevel.HEADING_2,
           }),
-          ...jsonToBullet(profile?.workHistory),
+          ...renderEducationHistory(profile?.educationHistory),
 
-          new Paragraph({ text: "" }),
+          emptyLine(),
 
           new Paragraph({
-            text: "VIII. LỊCH SỬ XUẤT/NHẬP CẢNH",
+            text: "VIII. QUÁ TRÌNH CÔNG TÁC",
             heading: HeadingLevel.HEADING_2,
           }),
-          ...jsonToBullet(profile?.travelHistory),
+          ...renderWorkHistory(profile?.workHistory),
 
-          new Paragraph({ text: "" }),
+          emptyLine(),
 
           new Paragraph({
-            text:
-              "Tôi xin cam đoan những thông tin trên là đúng sự thật. Nếu sai tôi xin hoàn toàn chịu trách nhiệm.",
+            text: "IX. LỊCH SỬ XUẤT/NHẬP CẢNH",
+            heading: HeadingLevel.HEADING_2,
           }),
+          ...renderTravelHistory(profile?.travelHistory),
 
-          new Paragraph({ text: "" }),
+          emptyLine(),
 
           new Paragraph({
             children: [
-              new TextRun("Ngày ....... tháng ....... năm ......."),
+              new TextRun({
+                text:
+                  "Tôi xin cam đoan những thông tin trên là đúng sự thật. Nếu sai tôi xin hoàn toàn chịu trách nhiệm.",
+                font: VN_FONT,
+              }),
             ],
+          }),
+
+          emptyLine(),
+
+          new Paragraph({
+            children: [new TextRun({ text: "Ngày ....... tháng ....... năm .......", font: VN_FONT })],
             alignment: AlignmentType.RIGHT,
           }),
 
-          new Paragraph({ text: "" }),
+          emptyLine(),
 
           new Paragraph({
-            children: [new TextRun({ text: "Người khai (Ký, ghi rõ họ tên)", bold: true })],
+            children: [new TextRun({ text: "Người khai (Ký, ghi rõ họ tên)", bold: true, font: VN_FONT })],
             alignment: AlignmentType.RIGHT,
           }),
         ],

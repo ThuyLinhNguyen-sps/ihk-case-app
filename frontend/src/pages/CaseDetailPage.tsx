@@ -275,7 +275,7 @@ export default function CaseDetailPage() {
     fontWeight: 1000,
   }}
 >
-  ➜ Visa Profile (VI)
+  ➜ Tạo sơ yếu Lý Lịch
 </Link>
 
           <div
