@@ -150,6 +150,19 @@ export const api = {
       `/cases/${caseId}/custom-documents/${docId}/download`,
     );
   },
+downloadSoYeuLyLichDocx: async (caseId: number) => {
+  const token = getToken();
+  const res = await fetch(`${BASE}/cases/${caseId}/visa-profile/so-yeu-ly-lich.docx`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+
+  if (res.status === 401 || res.status === 403) {
+    forceLogout();
+    throw new Error("Unauthorized");
+  }
+  if (!res.ok) throw new Error(`Download failed: ${res.status}`);
+  return res.blob();
+},
 
   // ===== VISA PROFILE (NEW) =====
   getVisaProfile: (caseId: number) => request(`/cases/${caseId}/visa-profile`),

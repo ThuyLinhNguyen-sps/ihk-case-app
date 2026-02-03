@@ -213,6 +213,15 @@ export default function CaseVisaProfilePage() {
     try {
       const payload = cleanPayloadForSave(form);
       await api.saveVisaProfile(caseId, payload);
+      const blob = await api.downloadSoYeuLyLichDocx(caseId);
+const url = URL.createObjectURL(blob);
+const a = document.createElement("a");
+a.href = url;
+a.download = `so-yeu-ly-lich_case-${caseId}.docx`;
+document.body.appendChild(a);
+a.click();
+a.remove();
+URL.revokeObjectURL(url);
 
       // refetch để chắc chắn refresh thấy dữ liệu
       const fresh = await api.getVisaProfile(caseId);
