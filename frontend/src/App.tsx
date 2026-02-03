@@ -37,9 +37,7 @@ export default function App() {
         }
       />
       <Route path="/cases/:id/visa-profile" element={<CaseVisaProfilePage />} />
-<div style={{position:'fixed',bottom:10,right:10,background:'red',color:'#fff',padding:8,zIndex:99999}}>
-  BUILD_MARK_2026_02_03
-</div>
+
       <Route
         path="/cases/:id"
         element={
