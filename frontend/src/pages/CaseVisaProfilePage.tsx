@@ -142,17 +142,7 @@ function cleanPayloadForSave(form: VisaProfileForm) {
   };
 }
 
-function labelRelation(v: FamilyMember["relation"] | FamilyJobIncome["relation"]) {
-  const map: Record<string, string> = {
-    BO: "Bố",
-    ME: "Mẹ",
-    VO_CHONG: "Vợ/Chồng",
-    CON: "Con",
-    ANH_CHI_EM: "Anh/Chị/Em",
-    KHAC: "Khác",
-  };
-  return map[v] ?? v;
-}
+
 
 /** =========================
  * Page
