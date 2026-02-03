@@ -14,7 +14,7 @@ async function bootstrap() {
         "https://ihk-case-dvlahd6yi-linhs-projects-4538d790.vercel.app",
       ];
 
-      // ✅ cho luôn mọi preview *.vercel.app (đỡ đổi domain là chết)
+      // ✅ cho luôn mọi preview *.vercel.app
       const isVercel = origin.endsWith(".vercel.app");
 
       if (allowlist.includes(origin) || isVercel) {
@@ -23,7 +23,8 @@ async function bootstrap() {
 
       return callback(new Error("Not allowed by CORS: " + origin), false);
     },
-    methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"], // ✅ thêm PUT
     allowedHeaders: ["Content-Type", "Authorization"],
   });
 
